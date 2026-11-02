@@ -4,8 +4,9 @@ Read-only. Never edit these files; cleaned data goes to `data/processed/`. Raw f
 
 - **Price and demand:** AEMO Aggregated Price and Demand, NSW1, July 2021-June 2024
   ([AEMO aggregated data](https://www.aemo.com.au/energy-systems/electricity/national-electricity-market-nem/data-nem/aggregated-data)).
-  Reproduced by a fetch script [TBD: script path once built].
+  Reproduce with `python -m src.fetch_aemo` (script: `src/fetch_aemo.py`), which saves the monthly CSVs to `data/raw/aemo/`.
 - **Solar:** 5-minute dispatch of an existing NSW utility-scale solar farm (AEMO dispatch data).
-  Only a normalised 0-1 output factor is committed, in `data/processed/`.
-- **Downloaded on:** [TBD: record when the fetch script runs]
-- **Licence:** [TBD: confirm AEMO copyright permissions during the data audit]
+  Only a normalised 0-1 output factor is committed, as `data/processed/solar_factor_5min.csv.gz`.
+- **Downloaded on:** 28 Oct 2026 (AEMO monthly CSVs)
+- **Licence:** [AEMO Copyright Permissions](https://www.aemo.com.au/privacy-and-legal-notices/copyright-permissions)
+  allow anyone to use AEMO material for any purpose, with accurate attribution to AEMO as its author.

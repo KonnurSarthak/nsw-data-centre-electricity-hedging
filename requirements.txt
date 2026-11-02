@@ -3,3 +3,6 @@ duckdb
 matplotlib
 jupyter
 pytest
+openpyxl
+requests
+pyarrow

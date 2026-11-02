@@ -45,6 +45,9 @@ between strategies come from the strategy, not from luck in the draw.
 4. A solar PPA's expected value depends on the strike versus solar's capture price (below the
    baseload price because midday prices are low); the solar/flat-load mismatch can add risk.
 5. Bad-year cost is driven mainly by May-July 2022, so P95 falls noticeably when it is excluded.
+6. Solar output is highest when spot prices are negative (midday output averages 89.1 MW at negative
+   prices vs 76.7 MW otherwise), so a PPA settled on every interval pays strike minus a negative
+   price in those intervals. Suspending settlement when spot < 0 should lower the PPA's expected cost.
 
 ## Context (sourced)
 - ASX Energy NSW base strip settles, retrieved 28 Oct 2026: FY28 $99.44/MWh, FY29 $103.47/MWh,
@@ -77,7 +80,8 @@ between strategies come from the strategy, not from luck in the draw.
    Dispatch uses past information only: charge below the trailing 7-day 25th percentile price,
    discharge above the 75th, at most one cycle per day.
 4. **Solar PPA + battery:** virtual PPA settled against spot (no on-site capex), contracted so
-   peak solar output equals average load; strike-price sensitivity.
+   peak solar output equals average load; strike-price sensitivity. Base case settles every
+   interval; sensitivity suspends settlement when spot < 0 (a common contract clause).
 
 Main comparison: each strategy alone against spot. Plus one **recommended package** row that layers
 the battery and/or PPA on top of the chosen hedge level.
@@ -85,7 +89,8 @@ the battery and/or PPA on top of the chosen hedge level.
 ## Method notes
 - **Re-levelling (scale):** `p_adj = p × F_FY / mean(p_hist_FY)`, per historical FY, using the
   time-weighted mean (baseload futures are time-weighted). Sensitivity on P95: additive shift
-  `p_adj = p + (F_FY − mean(p_hist_FY))`.
+  `p_adj = p + (F_FY − mean(p_hist_FY))`. Re-levelled prices are clipped to the market floor
+  (−$1,000/MWh) and the current market price cap [TBD: cite AEMC's published cap in build].
 - **Bootstrap:** 7-day blocks drawn from the same calendar month, which keeps multi-day spike
   events and seasonality.
 - **Realised-vs-futures test:** re-run with realised spot set above and below `F` to show what the
@@ -110,6 +115,9 @@ the battery and/or PPA on top of the chosen hedge level.
 - About 3 years of history means P95 is drawn from a small number of seasons; a bad year worse
   than anything in FY22-FY24 is not represented.
 - Re-levelling by scaling shrinks crisis-era spikes in proportion; the shift sensitivity tests this.
+- The June 2022 administered price cap ($300/MWh) truncated the crisis tail, so history likely
+  understates how bad that period could have been without intervention.
+- The solar factor comes from one farm and keeps its outage days (12 days with midday output below 5 MW).
 - FY30 is held flat at the FY29 settle (no FY30 quote on the retrieval date).
 - The load profile is stylised. Hyperscale data centre loads are often flatter than this, which
   would make a baseload hedge fit even more closely.
