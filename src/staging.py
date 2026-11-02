@@ -19,7 +19,8 @@ def build_intervals() -> pd.DataFrame:
     con.execute(f"set file_search_path = '{ROOT.as_posix()}'")
     for sql_file in sorted(SQL_DIR.glob("*.sql")):
         con.execute(sql_file.read_text())
-    return con.sql("select * from int_intervals").df()
+    # Views carry no row order, so the cost engine's time order is set here.
+    return con.sql("select * from int_intervals order by interval_start").df()
 
 
 def main() -> None:
