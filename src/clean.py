@@ -63,10 +63,13 @@ def main() -> None:
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     prices = clean_prices()
     prices.to_parquet(PROCESSED_DIR / "nsw1_prices_5min.parquet", index=False)
-    solar = clean_solar_factor()
-    # Gzipped to keep the committed file around 1 MB; pandas reads .csv.gz directly.
-    solar.to_csv(PROCESSED_DIR / "solar_factor_5min.csv.gz", index=False, date_format="%Y-%m-%d %H:%M")
-    print(f"prices: {len(prices):,} rows; solar factor: {len(solar):,} rows")
+    print(f"prices: {len(prices):,} rows")
+    # The farm's raw export is not committed; without it the committed solar factor is used as-is.
+    if SOLAR_XLSX.exists():
+        solar = clean_solar_factor()
+        # Gzipped to keep the committed file around 1 MB; pandas reads .csv.gz directly.
+        solar.to_csv(PROCESSED_DIR / "solar_factor_5min.csv.gz", index=False, date_format="%Y-%m-%d %H:%M")
+        print(f"solar factor: {len(solar):,} rows")
 
 
 if __name__ == "__main__":
