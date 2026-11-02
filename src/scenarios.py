@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.bootstrap import annual_sums, draw_years, expected_draws
+from src.bootstrap import annual_sums, draw_years, expected_annual_sums, expected_draws
 from src.load import grid_mw
 from src.metrics import equivalent_annual_cost, npv, simple_payback, summarise
 from src.pricing import FUTURES_PRICE, MARKET_FLOOR, MARKET_PRICE_CAP, calibrate, relevel
@@ -83,6 +83,12 @@ def simulated_years(fy: int, price_level: float = 1.0, method: str = "scale", ex
     return annual_sums(daily, draw_years(daily.index, fy))
 
 
+@cache
+def expected_parts(fy: int, price_level: float = 1.0, method: str = "scale", exclude_crisis: bool = False) -> pd.Series:
+    """Exact expected annual sums for target FY fy (no sampling noise)."""
+    return expected_annual_sums(daily_parts(fy, price_level, method, exclude_crisis), fy)
+
+
 def monthly_parts(fy: int) -> pd.DataFrame:
     daily = daily_parts(fy)
     return daily.groupby([daily.index.year, daily.index.month]).sum()
@@ -97,12 +103,21 @@ def battery_eac(om_share: float = BATTERY_OM_SHARE, rate: float = DISCOUNT_RATE)
     return equivalent_annual_cost(BATTERY_CAPEX, BATTERY_CAPEX * om_share, rate, BATTERY_LIFE_YEARS)
 
 
-def evaluate(annual: pd.DataFrame, futures_price: float, worst_month_parts: pd.DataFrame | None = None, **strategy) -> dict:
-    """KPIs for one strategy on one set of simulated years."""
+def evaluate(fy: int, futures_price: float, price_level: float = 1.0, method: str = "scale",
+             exclude_crisis: bool = False, worst_month_parts: pd.DataFrame | None = None, **strategy) -> dict:
+    """KPIs for one strategy in one price scenario: exact expected cost, simulated P95.
+
+    A battery strategy carries its equivalent annual capex and O&M in every figure, so all columns share one basis.
+    """
+    case = (fy, price_level, method, exclude_crisis)
     capex = battery_eac() if strategy.get("battery_fade") is not None else 0.0
-    row = summarise(strategy_cost(annual, futures_price, **strategy), annual["load_mwh"], capex)
+    simulated_cost = strategy_cost(simulated_years(*case), futures_price, **strategy) + capex
+    expected = expected_parts(*case)
+    row = summarise(simulated_cost, strategy_cost(expected, futures_price, **strategy) + capex, expected["load_mwh"])
+    row["capex_m"] = capex / 1e6
     if worst_month_parts is not None:
-        row["worst_month_cost_m"] = strategy_cost(worst_month_parts, futures_price, **strategy).max() / 1e6
+        # Capex is spread evenly over the 12 months.
+        row["worst_month_cost_m"] = (strategy_cost(worst_month_parts, futures_price, **strategy) + capex / 12).max() / 1e6
     return row
 
 
@@ -110,11 +125,10 @@ def hedge_curve() -> tuple[pd.DataFrame, pd.DataFrame]:
     """Expected and P95 cost by hedge level, and the level with the lowest FY-average P95."""
     rows = []
     for fy in TARGET_FYS:
-        annual = simulated_years(fy)
         for level in HEDGE_LEVELS:
             hedge_mw = level * average_load_mw()
             rows.append({"fy": fy, "hedge_pct": level * 100, "hedge_mw": hedge_mw,
-                         **evaluate(annual, FUTURES_PRICE[fy], hedge_mw=hedge_mw)})
+                         **evaluate(fy, FUTURES_PRICE[fy], hedge_mw=hedge_mw)})
     curve = pd.DataFrame(rows)
     curve["p95_reduction_m"] = curve.groupby("fy")["p95_cost_m"].transform(lambda s: s.iloc[0] - s)
     # One level for all three years: the CFO signs one policy, so it uses the FY-average P95 curve.
@@ -155,13 +169,14 @@ def strategy_table(specs: dict[str, dict], method: str = "scale", exclude_crisis
                    worst_month: bool = False) -> pd.DataFrame:
     rows = []
     for fy in TARGET_FYS:
-        annual = simulated_years(fy, method=method, exclude_crisis=exclude_crisis)
         months = monthly_parts(fy) if worst_month else None
         for name, spec in specs.items():
-            rows.append({"fy": fy, "strategy": name, **evaluate(annual, FUTURES_PRICE[fy], months, **with_fade(spec, fy))})
+            rows.append({"fy": fy, "strategy": name,
+                         **evaluate(fy, FUTURES_PRICE[fy], method=method, exclude_crisis=exclude_crisis,
+                                    worst_month_parts=months, **with_fade(spec, fy))})
     table = pd.DataFrame(rows)
     spot = table[table["strategy"] == "spot"].set_index("fy")
-    table["expected_saving_vs_spot_m"] = table["fy"].map(spot["expected_cost_m"]) - table["expected_cost_incl_capex_m"]
+    table["expected_saving_vs_spot_m"] = table["fy"].map(spot["expected_cost_m"]) - table["expected_cost_m"]
     table["p95_reduction_vs_spot_m"] = table["fy"].map(spot["p95_cost_m"]) - table["p95_cost_m"]
     return table
 
@@ -170,14 +185,14 @@ def ppa_breakeven() -> pd.DataFrame:
     """Solar capture price and the PPA strike at which expected PPA settlement is zero, per FY."""
     rows = []
     for fy in TARGET_FYS:
-        annual = simulated_years(fy)
+        expected = expected_parts(fy)
         # Expected settlement K x solar MWh - solar value is zero at K = generation-weighted price.
-        capture_price = annual["solar_value"].mean() / annual["solar_mwh"].mean()
+        capture_price = expected["solar_value"] / expected["solar_mwh"]
         rows.append({"fy": fy, "futures_price": FUTURES_PRICE[fy], "solar_capture_price": capture_price,
                      "capture_ratio": capture_price / FUTURES_PRICE[fy],
                      "breakeven_strike_all_intervals": capture_price,
                      # With suspension only non-negative intervals settle, so break-even is their weighted price.
-                     "breakeven_strike_suspend_negative": annual["solar_value_settled"].mean() / annual["solar_mwh_settled"].mean(),
+                     "breakeven_strike_suspend_negative": expected["solar_value_settled"] / expected["solar_mwh_settled"],
                      "assumed_strike": PPA_STRIKE})
     return pd.DataFrame(rows)
 
@@ -194,14 +209,14 @@ def add_ppa_breakeven(summary: pd.DataFrame, breakeven_strikes: pd.DataFrame) ->
 
 
 def package_rule(summary: pd.DataFrame, min_p95_level: float) -> tuple[pd.DataFrame, dict]:
-    """Add the battery or PPA to the recommended hedge only if it lowers both expected cost (incl. capex) and P95."""
-    average = summary.groupby("strategy")[["expected_cost_incl_capex_m", "p95_cost_m"]].mean()
+    """Add the battery or PPA to the recommended hedge only if it lowers both expected cost and P95 (both incl. capex)."""
+    average = summary.groupby("strategy")[["expected_cost_m", "p95_cost_m"]].mean()
     base = average.loc["hedge_min_p95"]
     rows = []
     for add_on in ["battery", "ppa"]:
         change = average.loc[f"hedge_min_p95_plus_{add_on}"] - base
         rows.append({"add_on": add_on,
-                     "expected_change_incl_capex_m": change["expected_cost_incl_capex_m"],
+                     "expected_change_m": change["expected_cost_m"],
                      "p95_change_m": change["p95_cost_m"],
                      "included": bool((change < 0).all())})
     rule = pd.DataFrame(rows)
@@ -247,32 +262,30 @@ def realised_vs_futures(min_p95_level: float) -> pd.DataFrame:
     rows = []
     for fy in TARGET_FYS:
         for level in REALISED_LEVELS:
-            annual = simulated_years(fy, level)
             for name, hedge in [("spot", 0.0), ("hedge_min_p95", min_p95_level), ("hedge_100", 1.0)]:
                 rows.append({"fy": fy, "realised_level": level, "realised_price": FUTURES_PRICE[fy] * level,
-                             "strategy": name, **evaluate(annual, FUTURES_PRICE[fy], hedge_mw=hedge * average_load_mw())})
+                             "strategy": name, **evaluate(fy, FUTURES_PRICE[fy], price_level=level,
+                                                          hedge_mw=hedge * average_load_mw())})
     return pd.DataFrame(rows)
 
 
 def hedge_price_sensitivity(min_p95_level: float) -> pd.DataFrame:
     rows = []
     for fy in TARGET_FYS:
-        annual = simulated_years(fy)
         for level in HEDGE_PRICE_LEVELS:
             hedge_price = FUTURES_PRICE[fy] * level
             rows.append({"fy": fy, "hedge_price_level": level, "hedge_price": hedge_price, "strategy": "hedge_min_p95",
-                         **evaluate(annual, hedge_price, hedge_mw=min_p95_level * average_load_mw())})
+                         **evaluate(fy, hedge_price, hedge_mw=min_p95_level * average_load_mw())})
     return pd.DataFrame(rows)
 
 
 def ppa_strike_sensitivity() -> pd.DataFrame:
     rows = []
     for fy in TARGET_FYS:
-        annual = simulated_years(fy)
-        spot = evaluate(annual, FUTURES_PRICE[fy])
+        spot = evaluate(fy, FUTURES_PRICE[fy])
         for strike in PPA_STRIKES:
             for settlement, suspend in [("all_intervals", False), ("suspend_negative", True)]:
-                row = evaluate(annual, FUTURES_PRICE[fy], strike=strike, suspend_negative=suspend)
+                row = evaluate(fy, FUTURES_PRICE[fy], strike=strike, suspend_negative=suspend)
                 rows.append({"fy": fy, "strike": strike, "settlement": settlement, **row,
                              "expected_saving_vs_spot_m": spot["expected_cost_m"] - row["expected_cost_m"],
                              "p95_reduction_vs_spot_m": spot["p95_cost_m"] - row["p95_cost_m"]})
@@ -281,7 +294,7 @@ def ppa_strike_sensitivity() -> pd.DataFrame:
 
 def battery_npv() -> pd.DataFrame:
     # Saving vs spot is the battery's expected revenue; years after FY30 hold the FY30 level.
-    revenue = [simulated_years(fy)["battery_revenue"].mean() for fy in TARGET_FYS]
+    revenue = [expected_parts(fy)["battery_revenue"] for fy in TARGET_FYS]
     savings = revenue + [revenue[-1]] * (BATTERY_LIFE_YEARS - len(revenue))
     rows = []
     for rate in DISCOUNT_RATES:
@@ -298,7 +311,7 @@ def battery_npv() -> pd.DataFrame:
 def sensitivity_table(specs: dict[str, dict], **case) -> pd.DataFrame:
     table = strategy_table(specs, **case)
     table["cost_of_uncertainty_pct"] = table["cost_of_uncertainty_m"] / table["expected_cost_m"] * 100
-    keep = ["fy", "strategy", "expected_cost_m", "expected_cost_incl_capex_m", "p95_cost_m",
+    keep = ["fy", "strategy", "expected_cost_m", "p95_cost_m",
             "cost_of_uncertainty_m", "cost_of_uncertainty_pct"]
     return table[keep]
 

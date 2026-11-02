@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from src import scenarios
-from src.bootstrap import draw_years
+from src.bootstrap import draw_years, expected_draws
 from src.metrics import npv
 from src.pricing import FUTURES_PRICE
 from src.strategies import (
@@ -47,14 +47,14 @@ def test_npv_matches_a_hand_worked_example():
 
 def interval_cost(price, load_mw, solar_mw, battery_mw, futures_price, hedge_mw=0.0, strike=None,
                   suspend_negative=False, battery_fade=None):
-    """The brief's 5-minute interval cost, summed over the given intervals."""
+    """The brief's 5-minute interval cost, one value per interval."""
     cost = load_mw * price / 12 + hedge_mw * (futures_price - price) / 12
     if strike is not None:
         settles = (price >= 0) if suspend_negative else np.ones(len(price), dtype=bool)
         cost = cost + solar_mw * (strike - price) / 12 * settles
     if battery_fade is not None:
         cost = cost - battery_fade * battery_mw * price / 12
-    return cost.sum()
+    return cost
 
 
 @pytest.fixture(scope="module")
@@ -80,7 +80,7 @@ def test_one_historical_day_matches_the_interval_formula_for_every_strategy(fy_c
     for name, spec in specs.items():
         spec = scenarios.with_fade(spec, fy)
         expected = interval_cost(price[rows], table["load_mw"].to_numpy()[rows], table["solar_mw"].to_numpy()[rows],
-                                 battery_mw[rows], FUTURES_PRICE[fy], **spec)
+                                 battery_mw[rows], FUTURES_PRICE[fy], **spec).sum()
         assert strategy_cost(day, FUTURES_PRICE[fy], **spec) == pytest.approx(expected, rel=TOLERANCE), name
 
 
@@ -96,8 +96,53 @@ def test_one_simulated_year_matches_the_interval_formula_for_every_strategy(fy_c
     for name, spec in specs.items():
         spec = scenarios.with_fade(spec, fy)
         expected = interval_cost(price[rows], table["load_mw"].to_numpy()[rows], table["solar_mw"].to_numpy()[rows],
-                                 battery_mw[rows], FUTURES_PRICE[fy], **spec)
+                                 battery_mw[rows], FUTURES_PRICE[fy], **spec).sum()
         assert strategy_cost(annual, FUTURES_PRICE[fy], **spec) == pytest.approx(expected, rel=TOLERANCE), name
+
+
+def test_exact_expected_cost_matches_the_interval_formula_weighted_by_expected_draws(fy_case, specs):
+    fy, table, price, battery_mw = fy_case
+    daily = scenarios.daily_parts(fy)
+    day_weight = pd.Series(expected_draws(daily.index, fy), index=daily.index)
+    weights = table["trading_date"].map(day_weight).to_numpy()
+    assert weights.sum() / INTERVALS_PER_DAY == pytest.approx(366 if fy == 2028 else 365)
+    for name, spec in specs.items():
+        spec = scenarios.with_fade(spec, fy)
+        capex = scenarios.battery_eac() if "battery_fade" in spec else 0.0
+        expected = (interval_cost(price, table["load_mw"].to_numpy(), table["solar_mw"].to_numpy(), battery_mw,
+                                  FUTURES_PRICE[fy], **spec) * weights).sum() + capex
+        assert scenarios.evaluate(fy, FUTURES_PRICE[fy], **spec)["expected_cost_m"] * 1e6 == pytest.approx(expected, rel=TOLERANCE), name
+
+
+@pytest.mark.parametrize("fy", scenarios.TARGET_FYS)
+def test_exact_expected_cost_is_within_sampling_noise_of_the_simulated_mean(fy):
+    exact = strategy_cost(scenarios.expected_parts(fy), FUTURES_PRICE[fy])
+    simulated = strategy_cost(scenarios.simulated_years(fy), FUTURES_PRICE[fy]).mean()
+    # Seed SD of the simulated mean is $0.05M; $0.15M is three of them.
+    assert abs(simulated - exact) < 0.15e6
+
+
+def test_futures_are_fair_by_construction_so_every_hedge_level_has_the_spot_expected_cost():
+    summary = pd.read_csv(scenarios.TABLES_DIR / "strategy_summary.csv")
+    spot = summary[summary["strategy"] == "spot"].set_index("fy")["expected_cost_m"]
+    hedges = summary[summary["strategy"].str.fullmatch(r"hedge_(80|90|100|min_p95)")]
+    # The weighted mean price is calibrated to F to 1e-6 $/MWh, so the gap is far below $0.001M.
+    assert (hedges["expected_cost_m"] - hedges["fy"].map(spot)).abs().max() < 1e-3
+
+
+def test_battery_capex_is_in_every_battery_figure_on_one_basis():
+    # Hand calculation: $21.0M capex / 8.5595 (15-year annuity at 8%) + 2.5% O&M ($0.525M) = $2.9784M a year.
+    assert scenarios.battery_eac() / 1e6 == pytest.approx(2.9784, abs=1e-3)
+    fy = 2028
+    plain = strategy_cost(scenarios.simulated_years(fy), FUTURES_PRICE[fy], battery_fade=1.0)
+    expected_plain = strategy_cost(scenarios.expected_parts(fy), FUTURES_PRICE[fy], battery_fade=1.0)
+    row = scenarios.evaluate(fy, FUTURES_PRICE[fy], battery_fade=1.0)
+    assert row["capex_m"] == pytest.approx(2.9784, abs=1e-3)
+    assert row["expected_cost_m"] == pytest.approx(expected_plain / 1e6 + row["capex_m"], abs=1e-9)
+    assert row["p95_cost_m"] == pytest.approx(plain.quantile(0.95) / 1e6 + row["capex_m"], abs=1e-9)
+    # A constant shifts expected cost and P95 equally, so the spread does not change.
+    assert row["cost_of_uncertainty_m"] == pytest.approx((plain.quantile(0.95) - expected_plain) / 1e6, abs=1e-9)
+    assert scenarios.evaluate(fy, FUTURES_PRICE[fy])["capex_m"] == 0.0
 
 
 @pytest.mark.parametrize("fy", scenarios.TARGET_FYS)

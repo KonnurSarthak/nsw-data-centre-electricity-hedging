@@ -4,20 +4,18 @@ import pandas as pd
 BAD_YEAR_QUANTILE = 0.95
 
 
-def summarise(annual_cost: pd.Series, annual_load_mwh: pd.Series, annual_capex: float = 0.0) -> dict:
-    """Expected cost, effective price, P95 and cost of uncertainty from simulated annual costs ($M, $/MWh).
+def summarise(simulated_cost: pd.Series, expected_cost: float, expected_load_mwh: float) -> dict:
+    """Expected cost, effective price, P95 and cost of uncertainty ($M, $/MWh).
 
-    annual_capex is an equivalent annual cost added to expected cost only; it does not change the spread.
+    expected_cost is the exact expectation (no sampling noise); P95 comes from the simulated annual costs.
+    Both must already include any equivalent annual capex, so they sit on the same basis.
     """
-    expected = annual_cost.mean()
-    p95 = annual_cost.quantile(BAD_YEAR_QUANTILE)
+    p95 = simulated_cost.quantile(BAD_YEAR_QUANTILE)
     return {
-        "expected_cost_m": expected / 1e6,
-        "expected_cost_incl_capex_m": (expected + annual_capex) / 1e6,
-        "effective_price": expected / annual_load_mwh.mean(),
-        "effective_price_incl_capex": (expected + annual_capex) / annual_load_mwh.mean(),
+        "expected_cost_m": expected_cost / 1e6,
+        "effective_price": expected_cost / expected_load_mwh,
         "p95_cost_m": p95 / 1e6,
-        "cost_of_uncertainty_m": (p95 - expected) / 1e6,
+        "cost_of_uncertainty_m": (p95 - expected_cost) / 1e6,
     }
 
 

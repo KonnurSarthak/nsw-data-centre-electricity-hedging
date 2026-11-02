@@ -44,6 +44,14 @@ def expected_draws(pool_dates: pd.DatetimeIndex, fy: int) -> np.ndarray:
     return pool_month.map(target_days / pool_month.value_counts()).to_numpy()
 
 
+def expected_annual_sums(daily: pd.DataFrame, fy: int) -> pd.Series:
+    """Exact expected annual sums of the daily components: each pool day weighted by its expected draws.
+
+    Every strategy cost is linear in these sums, so the expected cost has no sampling noise.
+    """
+    return daily.mul(expected_draws(daily.index, fy), axis=0).sum()
+
+
 def annual_sums(daily: pd.DataFrame, day_index: np.ndarray) -> pd.DataFrame:
     """Sum daily components over each simulated year: one row per simulated year."""
     return pd.DataFrame(daily.to_numpy()[day_index].sum(axis=1), columns=daily.columns)

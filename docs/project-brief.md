@@ -19,11 +19,11 @@ Energy per 5-minute interval: MWh = MW / 12. `F` = futures price for the FY, `K`
 | KPI | Exact formula | Grain |
 |---|---|---|
 | Interval cost ($) | `load_MW × price / 12` + hedge settlement `hedge_MW × (F − price) / 12` + PPA settlement `solar_MW × (K − price) / 12` − battery net revenue | 5-min interval × strategy |
-| Expected annual cost ($M) | mean of simulated annual costs across N bootstrap years | strategy × FY |
+| Expected annual cost ($M) | exact expectation: each pool day's cost weighted by its expected number of draws in a simulated year (no sampling noise); battery options include equivalent annual capex + O&M (8%, 15 years) | strategy × FY |
 | Effective price ($/MWh) | expected annual cost / annual load MWh | strategy × FY |
-| Bad-year cost ($M) | 95th percentile (P95) of simulated annual costs | strategy × FY |
+| Bad-year cost ($M) | 95th percentile (P95) of simulated annual costs, on the same basis as expected cost (battery options include the same annual capex + O&M) | strategy × FY |
 | Cost of uncertainty ($M) | P95 − expected annual cost | strategy × FY |
-| Worst-month cost ($M) | highest calendar-month cost in the re-levelled historical series | strategy |
+| Worst-month cost ($M) | highest calendar-month cost in the re-levelled historical series; battery options include one twelfth of the annual capex + O&M | strategy |
 | NPV ($M, capex options only) | `−capex + Σ_{t=1..15} (saving_t × 0.98^(t−1) − O&M_t) / (1 + r)^t`, where saving = spot cost − strategy cost; 15-year asset life, 2%/yr capacity fade, prices held at the FY30 level after FY30, r = 8% (6-10% sensitivity) | strategy |
 | Simple payback (years, capex options only) | capex / average annual saving after 2%/yr fade and O&M over the 15-year life | strategy |
 | Hedge break-even futures price ($/MWh) | futures price `F` at which expected hedged cost = expected spot cost | FY |
