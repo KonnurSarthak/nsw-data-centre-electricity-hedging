@@ -177,6 +177,26 @@ def test_battery_respects_its_physical_limits():
     assert daily_discharge.max() <= BATTERY_MWH + 1e-9
 
 
+@pytest.mark.parametrize("day", ["2022-06-10", "2023-01-15", "2024-02-20"])
+def test_battery_on_real_days_follows_the_trailing_percentile_rule(fy_case, day):
+    fy, table, price, battery_mw = fy_case
+    start = table["interval_start"].to_numpy()
+    rows = np.flatnonzero(table["trading_date"].to_numpy() == pd.Timestamp(day).to_datetime64())
+    for i in rows:
+        # Thresholds are recomputed from the prices in the 7 days before each interval, not from the dispatch code.
+        window = price[(start >= start[i] - np.timedelta64(7, "D")) & (start < start[i])]
+        low, high = np.quantile(window, [0.25, 0.75])
+        if battery_mw[i] > 0:
+            assert price[i] > high
+        if battery_mw[i] < 0:
+            assert price[i] < low
+    step_mwh = battery_mw / 12
+    assert (battery_mw[rows] != 0).any()
+    assert np.clip(step_mwh[rows], 0, None).sum() <= BATTERY_MWH + 1e-9
+    stored = np.cumsum(np.where(step_mwh < 0, -step_mwh * ROUND_TRIP_EFFICIENCY, -step_mwh))[: rows[-1] + 1]
+    assert stored.min() >= -1e-9 and stored.max() <= BATTERY_MWH + 1e-9
+
+
 def test_battery_dispatch_uses_only_past_prices():
     rng = np.random.default_rng(2)
     prices = pd.Series(rng.gamma(2.0, 50.0, 20 * INTERVALS_PER_DAY))
