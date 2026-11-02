@@ -123,6 +123,7 @@ python -m src.fetch_aemo         # download 36 monthly AEMO price files to data/
 python -m src.clean              # clean prices into data/processed/ (the solar factor is already committed)
 python -m src.staging            # run the SQL in sql/ on DuckDB
 python -m src.scenarios          # write the 14 result tables to reports/tables/
+python -m src.seed_check         # rerun the bootstrap over 20 seeds, write seed_sensitivity.csv
 python -m src.viz                # write the 6 charts to reports/figures/
 pytest                           # run the 56 tests
 ```

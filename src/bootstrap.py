@@ -8,13 +8,13 @@ N_YEARS = 5_000
 SEED = 2028
 
 
-def draw_years(pool_dates: pd.DatetimeIndex, fy: int, n_years: int = N_YEARS) -> np.ndarray:
+def draw_years(pool_dates: pd.DatetimeIndex, fy: int, n_years: int = N_YEARS, seed: int = SEED) -> np.ndarray:
     """Positions into pool_dates for each simulated day: shape (n_years, days in target FY).
 
     pool_dates must be sorted whole calendar months. The same matrix is reused for every strategy,
     so differences come from the strategy, not the draw.
     """
-    rng = np.random.default_rng(SEED)
+    rng = np.random.default_rng(seed)
     pool_dates = pd.DatetimeIndex(pool_dates)
     positions = pd.Series(np.arange(len(pool_dates)))
     year_month = pool_dates.year * 100 + pool_dates.month
