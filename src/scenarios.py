@@ -141,6 +141,7 @@ def strategy_specs(min_p95_level: float) -> dict[str, dict]:
         "battery": {"battery_fade": 1.0},
         "ppa": {"strike": PPA_STRIKE},
         "ppa_suspend_negative": {"strike": PPA_STRIKE, "suspend_negative": True},
+        "ppa_plus_battery": {"strike": PPA_STRIKE, "battery_fade": 1.0},
         "hedge_min_p95_plus_battery": {"hedge_mw": recommended_mw, "battery_fade": 1.0},
         "hedge_min_p95_plus_ppa": {"hedge_mw": recommended_mw, "strike": PPA_STRIKE},
     }
@@ -163,6 +164,33 @@ def strategy_table(specs: dict[str, dict], method: str = "scale", exclude_crisis
     table["expected_saving_vs_spot_m"] = table["fy"].map(spot["expected_cost_m"]) - table["expected_cost_incl_capex_m"]
     table["p95_reduction_vs_spot_m"] = table["fy"].map(spot["p95_cost_m"]) - table["p95_cost_m"]
     return table
+
+
+def ppa_breakeven() -> pd.DataFrame:
+    """Solar capture price and the PPA strike at which expected PPA settlement is zero, per FY."""
+    rows = []
+    for fy in TARGET_FYS:
+        annual = simulated_years(fy)
+        # Expected settlement K x solar MWh - solar value is zero at K = generation-weighted price.
+        capture_price = annual["solar_value"].mean() / annual["solar_mwh"].mean()
+        rows.append({"fy": fy, "futures_price": FUTURES_PRICE[fy], "solar_capture_price": capture_price,
+                     "capture_ratio": capture_price / FUTURES_PRICE[fy],
+                     "breakeven_strike_all_intervals": capture_price,
+                     # With suspension only non-negative intervals settle, so break-even is their weighted price.
+                     "breakeven_strike_suspend_negative": annual["solar_value_settled"].mean() / annual["solar_mwh_settled"].mean(),
+                     "assumed_strike": PPA_STRIKE})
+    return pd.DataFrame(rows)
+
+
+def add_ppa_breakeven(summary: pd.DataFrame, breakeven_strikes: pd.DataFrame) -> pd.DataFrame:
+    """Attach capture price and the matching break-even strike to rows that hold a PPA."""
+    by_fy = breakeven_strikes.set_index("fy")
+    has_ppa = summary["strategy"].str.contains("ppa")
+    suspended = summary["strategy"].str.contains("suspend_negative")
+    summary["solar_capture_price"] = summary["fy"].map(by_fy["solar_capture_price"]).where(has_ppa)
+    summary["ppa_breakeven_strike"] = summary["fy"].map(by_fy["breakeven_strike_all_intervals"]).where(has_ppa & ~suspended)
+    summary.loc[suspended, "ppa_breakeven_strike"] = summary.loc[suspended, "fy"].map(by_fy["breakeven_strike_suspend_negative"])
+    return summary
 
 
 def package_rule(summary: pd.DataFrame, min_p95_level: float) -> tuple[pd.DataFrame, dict]:
@@ -302,6 +330,9 @@ def main() -> None:
     summary = pd.concat([summary, strategy_table({"spot": {}, "package": package}, worst_month=True)
                          .query("strategy == 'package'")], ignore_index=True)
 
+    ppa_strikes = ppa_breakeven()
+    summary = add_ppa_breakeven(summary, ppa_strikes)
+
     core = {name: specs[name] for name in ["spot", "hedge_min_p95", "hedge_100", "battery", "ppa"]}
     crisis = pd.concat([sensitivity_table(core).assign(pool="all_days"),
                         sensitivity_table(core, exclude_crisis=True).assign(pool="excl_may_jul_2022")])
@@ -314,6 +345,7 @@ def main() -> None:
         "hedge_recommendation": recommendation,
         "strategy_summary": summary,
         "package_rule": rule,
+        "ppa_breakeven": ppa_strikes,
         "hedge_breakeven": breakeven(min_p95_level),
         "realised_vs_futures": realised_vs_futures(min_p95_level),
         "hedge_price_sensitivity": hedge_price_sensitivity(min_p95_level),
