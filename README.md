@@ -86,6 +86,8 @@ without the 2022 crisis.
 1. **Data:** downloaded AEMO five-minute NSW spot prices for Oct 2021-Jun 2024 (289,152 intervals) and audited
    them for gaps, duplicates, spikes and price-cap events.
 2. **Load:** built a 50 MW data centre load from utilisation, time of day and seasonal cooling overhead.
+   50 MW is IT capacity; after utilisation and seasonal cooling overhead (PUE 1.20-1.35), average grid load is
+   about 53 MW, which is why the hedge is sized in MW of average load.
 3. **Prices:** re-levelled the historical prices so each year averages the ASX futures price for FY28-FY30
    ($99.44 and $103.47/MWh). This keeps the real shape of prices (spikes, seasons, negative midday prices) while
    comparing like with like.
