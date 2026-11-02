@@ -65,9 +65,12 @@ def read_table(name: str) -> pd.DataFrame:
     return pd.read_csv(TABLES_DIR / f"{name}.csv")
 
 
-def titled_figure(title: str, subtitle: str, size: tuple[float, float] = (9, 5.2)):
-    """Figure with a left-aligned takeaway title and a smaller subtitle that states the measure."""
-    fig, ax = plt.subplots(figsize=size)
+def titled_figure(title: str, subtitle: str, size: tuple[float, float] = (9, 5.2), **subplots):
+    """Figure with a left-aligned takeaway title and a smaller subtitle that states the measure.
+
+    subplots: passed to plt.subplots for multi-panel charts (e.g. ncols, width_ratios).
+    """
+    fig, ax = plt.subplots(figsize=size, **subplots)
     fig.subplots_adjust(top=0.80, left=0.10, right=0.96, bottom=0.13)
     fig.text(0.02, 0.965, title, fontsize=13, fontweight="bold", color=INK, va="top", wrap=True)
     fig.text(0.02, 0.885, subtitle, fontsize=9.5, color=INK_SECONDARY, va="top", wrap=True)
@@ -236,19 +239,20 @@ def ppa_strike_chart() -> None:
 
 
 def top_intervals_chart() -> None:
-    """Share of the top 1% price intervals by month, with the May-Jul 2022 crisis window highlighted."""
+    """Share of the top 1% price intervals by month, with the May-Jul 2022 crisis window highlighted,
+    next to spot cost of uncertainty with and without that window."""
     months = read_table("crisis_diagnostics")
     crisis = read_table("crisis_sensitivity").query("fy == @FY and strategy == 'spot'").set_index("pool")
     crisis_share = months.loc[months["in_crisis_window"], "share_of_top_intervals_pct"].sum()
-    fig, ax = titled_figure(
-        f"May-Jul 2022 holds {crisis_share:.0f}% of the top 1% prices, yet excluding it gives no reduction "
-        "in cost of uncertainty",
-        f"Share of the top 1% of 5-minute prices ({months['n_top_intervals'].sum():,} intervals at "
+    fig, (ax, ax_uncertainty) = titled_figure(
+        f"May-Jul 2022 holds {crisis_share:.0f}% of the worst prices, but removing it doesn't lower the "
+        "cost of uncertainty",
+        f"Left: share of the top 1% of 5-minute prices ({months['n_top_intervals'].sum():,} intervals at "
         f"${months['top_price_cut'].iloc[0]:.0f}/MWh or more, FY{FY % 100} re-levelled) by month. "
-        f"Spot cost of uncertainty: {crisis.loc['all_days', 'cost_of_uncertainty_pct']:.1f}% of expected "
-        f"with all days, {crisis.loc['excl_may_jul_2022', 'cost_of_uncertainty_pct']:.1f}% without May-Jul 2022.",
-        size=(10.5, 5.2),
+        f"Right: spot cost of uncertainty (P95 minus expected) as % of expected cost, FY{FY % 100}.",
+        size=(10.5, 5.2), ncols=2, width_ratios=[3.2, 1],
     )
+    fig.subplots_adjust(wspace=0.32)
     colours = [HIGHLIGHT if in_crisis else MUTED for in_crisis in months["in_crisis_window"]]
     ax.bar(range(len(months)), months["share_of_top_intervals_pct"], width=0.8, color=colours)
     labels = pd.PeriodIndex(months["month"], freq="M").strftime("%b %y")
@@ -259,6 +263,16 @@ def top_intervals_chart() -> None:
     peak = months["share_of_top_intervals_pct"].idxmax()
     ax.annotate("May-Jul 2022\n(dropped in the sensitivity run)", (peak, months.loc[peak, "share_of_top_intervals_pct"]),
                 xytext=(14, -10), textcoords="offset points", fontsize=9, color=INK)
+
+    pools = [("all_days", "All days"), ("excl_may_jul_2022", "Without\nMay-Jul 2022")]
+    shares = [crisis.loc[pool, "cost_of_uncertainty_pct"] for pool, _ in pools]
+    ax_uncertainty.bar(range(len(pools)), shares, width=0.6, color=STRATEGY_COLOURS["spot"])
+    for x, share in enumerate(shares):
+        ax_uncertainty.text(x, share + 0.4, f"{share:.1f}%", ha="center", fontsize=9, color=INK)
+    ax_uncertainty.set_xticks(range(len(pools)), [label for _, label in pools])
+    ax_uncertainty.grid(axis="x", visible=False)
+    ax_uncertainty.set_ylim(0, max(shares) * 1.25)
+    ax_uncertainty.set_ylabel("Spot cost of uncertainty (% of expected)")
     save(fig, "06_top_intervals_by_month")
 
 

@@ -22,8 +22,9 @@ solar PPA at the assumed $65/MWh strike, both cost more than spot.
    (-$11.80M to -$16.87M across the sensitivities), and payback is 29.5 years against a 15-year life.
 4. **Only sign a solar PPA below break-even.** Solar earns $53.41/MWh, 54% of the baseload price. A PPA lowers
    expected cost only at a strike below $53.41, or below $66.99 if settlement is suspended when spot is negative.
-5. **Bad years are not one crisis.** May-Jul 2022 holds 70% of the top 1% price intervals, but excluding those
-   months gives no reduction in cost of uncertainty (15.5% of expected cost with all days, 16.1% without).
+5. **Excluding the 2022 crisis doesn't remove the risk.** May-Jul 2022 holds 70% of the top 1% price intervals,
+   but without those months the cost of uncertainty doesn't fall (15.5% of expected cost with all days, 16.1%
+   without).
 
 All figures are for FY28. Battery figures include $2.98M a year of equivalent capex and O&M (8%, 15 years).
 FY29-FY30 results and the hypothesis verdicts are in [the findings report](reports/findings.md).
@@ -76,10 +77,11 @@ against the $99.44/MWh futures price.
 Solar output peaks when spot prices are negative, so whether the contract pays out in those intervals matters as
 much as the strike itself.
 
-![May-Jul 2022 holds 70% of the top 1% prices, yet excluding it gives no reduction in cost of uncertainty](reports/figures/06_top_intervals_by_month.png)
+![May-Jul 2022 holds 70% of the worst prices, but removing it doesn't lower the cost of uncertainty](reports/figures/06_top_intervals_by_month.png)
 
-The bad-year tail comes from short, extreme spikes in every year of the history, so the case for hedging holds
-without the 2022 crisis.
+The bad-year tail also comes from short, extreme spikes in other years, so the case for hedging holds without the
+2022 crisis. Part of this result may come from re-levelling each year separately
+([Limitations](reports/findings.md#limitations)).
 
 ## Approach
 

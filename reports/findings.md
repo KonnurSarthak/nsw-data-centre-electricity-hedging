@@ -21,8 +21,8 @@ the bootstrap draws; P95 comes from 5,000 simulated years per FY. Charts are bui
    to $47.50M; NPV is -$14.62M at 8% (-$11.80M to -$16.87M) and payback is 29.5 years against a 15-year life.
 4. **Only sign a solar PPA below break-even.** Solar earns $53.41/MWh, 54% of the baseload price. A PPA lowers expected
    cost only at a strike below $53.41, or below $66.99 if settlement is suspended when spot is negative.
-5. **Bad years are not one crisis.** May-Jul 2022 holds 70% of the top 1% price intervals, but excluding it gives no
-   reduction in cost of uncertainty (15.5% of expected cost with all days, 16.1% without).
+5. **Excluding the 2022 crisis doesn't remove the risk.** May-Jul 2022 holds 70% of the top 1% price intervals, but
+   without it the cost of uncertainty doesn't fall (15.5% of expected cost with all days, 16.1% without).
 
 ## Headline figures, FY28-FY30
 
@@ -114,7 +114,7 @@ Every hedge level has the spot expected cost because the model prices futures fa
 - **Now what:** only negotiate a PPA that includes a negative-price suspension clause, with a strike below about
   $67/MWh for FY28 and $70/MWh for FY29-FY30.
 
-### 6. Bad years come from spikes spread across all years, not one crisis
+### 6. Excluding the 2022 crisis doesn't remove the risk
 
 ![Top 1% intervals by month](figures/06_top_intervals_by_month.png)
 
@@ -123,7 +123,9 @@ Every hedge level has the spot expected cost because the model prices futures fa
   15.5% of expected cost with all days, 16.1% without. (`crisis_diagnostics.csv`, `crisis_sensitivity.csv`)
 - **So what:** the crisis was a sustained high price level held down by the $300 administered cap, which
   re-levelling scales down. The bad-year tail is associated with short, extreme spikes that occur in every year
-  of the pool (for example May 2024 and Feb 2024).
+  of the pool (for example June, May and February 2024). Part of this result may come from re-levelling each
+  year separately: without May-Jul 2022, the rest of FY22 and FY23 is scaled up to the futures price, which
+  stretches its spikes (see [Limitations](#limitations)).
 - **Now what:** don't treat 2022 as a one-off that makes spot safe again; the case for hedging holds without it.
 
 ## Why this differs from the original capstone analysis
