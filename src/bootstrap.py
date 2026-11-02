@@ -1,4 +1,6 @@
 """Simulate financial years by drawing 7-day blocks of historical days from the same calendar month."""
+import math
+
 import numpy as np
 import pandas as pd
 
@@ -25,7 +27,7 @@ def draw_years(pool_dates: pd.DatetimeIndex, fy: int, n_years: int = N_YEARS, se
     for month_start in pd.date_range(f"{fy - 1}-07-01", f"{fy}-06-01", freq="MS"):
         month_days = month_start.days_in_month
         starts = positions.to_numpy()[pool_dates.month == month_start.month]
-        n_blocks = -(-month_days // BLOCK_DAYS)
+        n_blocks = math.ceil(month_days / BLOCK_DAYS)
         chosen = rng.choice(starts, size=(n_years, n_blocks))[:, :, None]
         offset = chosen - month_first[chosen] + np.arange(BLOCK_DAYS)
         # Blocks wrap from the month's last day back to its first, so every day is equally likely to be drawn.

@@ -18,8 +18,8 @@ FIGURES_DIR = ROOT / "reports" / "figures"
 # FY28 is the first full forward year with a quoted futures price; FY29-FY30 follow the same pattern.
 FY = 2028
 
-# One colour per strategy in every chart. Blue, orange and aqua are the colour-blind-safe leading slots;
-# every strategy is also named in text on the chart, so colour is never the only cue.
+# One colour per strategy in every chart. Blue, orange and aqua are the first three colours of a
+# colour-blind-safe palette; every strategy is also named in text on the chart, so colour is never the only cue.
 STRATEGY_COLOURS = {
     "spot": "#eb6834",
     "hedge_100": "#2a78d6",
