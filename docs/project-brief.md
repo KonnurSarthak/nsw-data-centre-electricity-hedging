@@ -55,11 +55,21 @@ between strategies come from the strategy, not from luck in the draw.
   [ASX Energy](https://www.asxenergy.com.au/futures/au_electricity)
 - NSW $300 cap strip, FY28 settle $16.61/MWh (retrieved 28 Oct 2026): the market's price for
   spike protection. Same source.
-- CSIRO GenCost 2025-26: 2-hour battery capital cost $1,050/kW in 2025, down 15% in the latest year.
-  [GenCost 2025-26](https://www.csiro.au/-/media/Energy/GenCost-2025-26-Draft/GenCost2025-26ConsultDraft_20251216-FINAL.pdf)
-  [TBD: replace with the final report and take O&M from the GenCost data tables]
-- Solar PPA strike: [TBD: strong source]. Fallback is a $55-75/MWh sensitivity range; quotes that
-  include LGCs overstate an energy-only strike.
+- CSIRO GenCost 2025-26: 2-hour battery capital cost $1,050/kW in 2025, down 15% in the latest year
+  (consultation draft table; the final report, July 2026, confirms the draft battery costs).
+  [GenCost 2025-26](https://www.csiro.au/en/research/technology-space/energy/electricity-transition/gencost)
+  Battery fixed O&M not found in a citable form within the time box: assumed 2.5% of capex per year,
+  1.5-3.5% sensitivity.
+- AEMC schedule of reliability settings 2026-27: market price cap $23,200/MWh from 1 July 2026, the
+  latest published value; FY28-FY30 caps are CPI-indexed and not yet set. Market floor -$1,000/MWh.
+  [AEMC](https://www.aemc.gov.au/news-centre/media-releases/aemc-updates-market-price-cap-2026-27)
+- Discount rate: Oxford Economics Australia (2024), *Discount rates for energy infrastructure*, for
+  AEMO's 2026 ISP, estimates an 8.0% WACC for battery storage (7.0% central ISP rate).
+  [AEMO](https://www.aemo.com.au/-/media/files/major-publications/isp/2025/oxford-economics-australia-2024-discount-rate-report.pdf)
+- Solar PPA strike: no strong source found. One industry commentary puts NSW wind and solar PPAs at
+  $55-75/MWh including LGCs, which overstates an energy-only strike. Base case $65/MWh, sensitivity
+  $55-75/MWh in $5 steps.
+- Data centre load: IEA (2025), *Energy and AI*. [IEA](https://www.iea.org/reports/energy-and-ai)
 
 ## Scope
 - **In:** wholesale energy cost only, NSW1 region, 5-minute resolution for all cost calculations
@@ -90,7 +100,10 @@ the battery and/or PPA on top of the chosen hedge level.
 - **Re-levelling (scale):** `p_adj = p × F_FY / mean(p_hist_FY)`, per historical FY, using the
   time-weighted mean (baseload futures are time-weighted). Sensitivity on P95: additive shift
   `p_adj = p + (F_FY − mean(p_hist_FY))`. Re-levelled prices are clipped to the market floor
-  (−$1,000/MWh) and the current market price cap [TBD: cite AEMC's published cap in build].
+  (−$1,000/MWh) and the current market price cap ($23,200/MWh, AEMC 2026-27). The scale factor is
+  re-solved after clipping so the clipped mean still equals `F`.
+- **Bootstrap load:** each simulated day uses the drawn historical day's own calendar (season,
+  weekday, time band), so load and price stay paired from the same real day.
 - **Bootstrap:** 7-day blocks drawn from the same calendar month, which keeps multi-day spike
   events and seasonality.
 - **Realised-vs-futures test:** re-run with realised spot set above and below `F` to show what the
@@ -132,7 +145,7 @@ the battery and/or PPA on top of the chosen hedge level.
 - Later add-on: Power BI dashboard + screenshots
 
 ## Timeline
-Build 28 Oct 2026 (evening); publish 29 Oct 2026.
+Build 28 Oct-2 Nov 2026; publish 2 Nov 2026 (moved from 29 Oct 2026).
 
 ## Analysis plan
 1. **Fetch and reconcile (Python):** download AEMO CSVs, reconcile against the xlsx from 1 Oct 2021.
