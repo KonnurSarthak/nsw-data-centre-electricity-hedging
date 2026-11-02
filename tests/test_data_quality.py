@@ -102,7 +102,7 @@ def test_simulated_mean_price_is_close_to_futures_price(fy):
 
 
 @pytest.mark.parametrize("fy", scenarios.TARGET_FYS)
-def test_annual_load_matches_part_one(fy):
+def test_annual_load_is_463_to_465_gwh(fy):
     annual_gwh = scenarios.simulated_years(fy)["load_mwh"].mean() / 1_000
     days = pd.Timestamp(f"{fy}-06-30") - pd.Timestamp(f"{fy - 1}-07-01") + pd.Timedelta(days=1)
     # 463-464 GWh holds for a 365-day year; a leap year has one more day (about 1.27 GWh).
@@ -110,7 +110,7 @@ def test_annual_load_matches_part_one(fy):
     assert low <= annual_gwh <= high
 
 
-def test_historical_full_years_load_matches_part_one(intervals):
+def test_historical_full_years_load_is_463_to_465_gwh(intervals):
     annual_gwh = (intervals.groupby("fy")["load_mw"].sum() / 12 / 1_000).loc[[2023, 2024]]
     assert 463 <= annual_gwh[2023] <= 464
     assert 464 <= annual_gwh[2024] <= 465

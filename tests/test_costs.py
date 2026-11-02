@@ -227,7 +227,7 @@ def test_every_table_reproduces_from_a_clean_scenario_run(tmp_path, monkeypatch)
     # seed_sensitivity.csv comes from src/seed_check.py, not from scenarios.main().
     committed = {path.name: pd.read_csv(path) for path in scenarios.TABLES_DIR.glob("*.csv")
                  if path.name != "seed_sensitivity.csv"}
-    # Cleared so the rerun recomputes from the processed data instead of reusing earlier results in this session.
+    # Cleared so the rerun recomputes from the processed data instead of reusing results from earlier tests.
     for cached in (scenarios.intervals, scenarios.scenario_price, scenarios.daily_parts, scenarios.simulated_years):
         cached.cache_clear()
     monkeypatch.setattr(scenarios, "TABLES_DIR", tmp_path)
