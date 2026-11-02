@@ -23,7 +23,6 @@ TARGET_FYS = [2028, 2029, 2030]
 # Above 100% the hedge sells surplus baseload; the curve shows where P95 stops falling.
 HEDGE_LEVELS = [round(level / 10, 1) for level in range(14)]
 COMPARISON_HEDGE_LEVELS = [0.8, 0.9, 1.0]
-KNEE_SHARE = 0.9
 PPA_STRIKE = 65.0
 PPA_STRIKES = [55.0, 60.0, 65.0, 70.0, 75.0]
 DISCOUNT_RATE = 0.08
@@ -134,12 +133,9 @@ def hedge_curve() -> tuple[pd.DataFrame, pd.DataFrame]:
     # One level for all three years: the CFO signs one policy, so it uses the FY-average P95 curve.
     p95 = curve.groupby("hedge_pct")["p95_cost_m"].mean()
     min_p95_pct = p95.idxmin()
-    # Retired 90%-knee rule, kept for reference: the curve is nearly straight, so it returns about 90% by construction.
-    reduction = p95.iloc[0] - p95
-    knee_pct = reduction[reduction >= KNEE_SHARE * reduction.max()].index.min()
     recommendation = pd.DataFrame({
         "min_p95_hedge_pct": [min_p95_pct], "min_p95_hedge_mw": [min_p95_pct / 100 * average_load_mw()],
-        "average_load_mw": [average_load_mw()], "retired_knee_hedge_pct": [knee_pct],
+        "average_load_mw": [average_load_mw()],
         "fy_avg_p95_at_min_m": [p95.min()], "fy_avg_p95_unhedged_m": [p95.iloc[0]],
     })
     return curve, recommendation
