@@ -147,9 +147,6 @@ the battery and/or PPA on top of the chosen hedge level.
 - [x] Findings report (`reports/findings.md`)
 - [x] README that passes the 30-second test, with 5-6 takeaway-titled charts
 
-## Timeline
-Build 28 Oct-2 Nov 2026; publish 2 Nov 2026 (moved from 29 Oct 2026).
-
 ## Analysis plan
 1. **Fetch and reconcile (Python):** download AEMO CSVs, reconcile against the xlsx from 1 Oct 2021.
 2. **Audit:** gaps, duplicates, interval resolution, price cap/floor events, solar data quality.
