@@ -3,26 +3,11 @@
 *Capstone project, Master of Business Analytics, final semester (2026)*
 
 **Answer:** hedge 90-100% of average load with ASX baseload futures. It cuts the FY28 bad-year electricity
-cost from $53.03M to $46.25-46.77M with no change in expected cost ($45.90M). At today's assumptions, a battery,
-and a solar PPA at the assumed $65/MWh strike, both cost more than spot.
+cost from $53.03M to $46.25-46.77M with no change in expected cost ($45.90M) if futures are fairly priced (each
+$1/MWh futures premium would cost about $0.47M a year at a full hedge). At today's assumptions, a battery, and a
+solar PPA at the assumed $65/MWh strike, both cost more than spot.
 
-![Hedging 100% of average load cuts FY28 bad-year cost by $6.8M, with no change in expected cost](reports/figures/01_hedge_curve.png)
-
-## Inspiration
-
-In my final semester, our capstone asked how a new data centre in New South Wales should buy its electricity.
-Under a semester deadline we delivered a clear recommendation, but one result stayed with me: the futures hedge
-appeared to save millions every single year. Hedges usually buy certainty, not savings, so a result that good
-deserved a second look. After graduating, I rebuilt the analysis from scratch with new code, the full five-minute
-market data and more time to test the assumptions. This project is the question I wished we'd asked from the start.
-([Why the answers differ](reports/findings.md#why-this-differs-from-the-original-capstone-analysis))
-
-## The question
-
-For the next three financial years, FY2028-FY2030 (July 2027 to June 2030), how do buying at spot, hedging with
-futures, adding a battery or contracting solar compare on what electricity usually costs, and on what it costs in a
-bad year? The audience is the data centre's CFO or energy procurement lead, who has to choose a procurement strategy
-and decide how much of the load to hedge. Costs are wholesale energy only, in the NSW market.
+![Hedging 100% of average load cuts FY28 bad-year cost by $6.8M, with no change in expected cost if futures are fairly priced (each $1/MWh futures premium would cost about $0.47M a year)](reports/figures/01_hedge_curve.png)
 
 ## Key findings
 
@@ -41,7 +26,33 @@ and decide how much of the load to hedge. Costs are wholesale energy only, in th
    months gives no reduction in cost of uncertainty (15.5% of expected cost with all days, 16.1% without).
 
 All figures are for FY28. Battery figures include $2.98M a year of equivalent capex and O&M (8%, 15 years).
-FY29-FY30 results, the full recommendations and the hypothesis verdicts are in [the findings report](reports/findings.md).
+FY29-FY30 results and the hypothesis verdicts are in [the findings report](reports/findings.md).
+
+## Recommendations
+
+In priority order; owners, measures and risks are in [the findings report](reports/findings.md#recommendations-ranked-by-impact-x-ease).
+
+1. **Hedge 90-100% of average load (48-53 MW) with ASX baseload futures for FY28-FY30**, and check the hedge
+   ratio against actual load each month.
+2. **Hold off on a battery** and re-run the case with each CSIRO GenCost release as battery costs fall.
+3. **Negotiate a solar PPA only with a negative-price suspension clause** and a strike below $66.99/MWh for FY28
+   ($69.70 for FY29-FY30).
+
+## Inspiration
+
+In my final semester, our capstone asked how a new data centre in New South Wales should buy its electricity.
+Under a semester deadline we delivered a clear recommendation, but one result stayed with me: the futures hedge
+appeared to save millions every single year. Hedges usually buy certainty, not savings, so a result that good
+deserved a second look. After graduating, I rebuilt the analysis from scratch with new code, the full five-minute
+market data and more time to test the assumptions. This project is the question I wished we'd asked from the start.
+([Why the answers differ](reports/findings.md#why-this-differs-from-the-original-capstone-analysis))
+
+## The question
+
+For the next three financial years, FY2028-FY2030 (July 2027 to June 2030), how do buying at spot, hedging with
+futures, adding a battery or contracting solar compare on what electricity usually costs, and on what it costs in a
+bad year? The audience is the data centre's CFO or energy procurement lead, who has to choose a procurement strategy
+and decide how much of the load to hedge. Costs are wholesale energy only, in the NSW market.
 
 ## What the charts show
 
@@ -88,6 +99,15 @@ without the 2022 crisis.
 **Tools:** SQL on DuckDB for staging and joins; Python (pandas, matplotlib) for the load profile, pricing,
 simulation and charts; pytest for tests. I used DuckDB because it runs on any laptop with no server, and its
 standard SQL ports to PostgreSQL or Snowflake.
+
+## Where to look in the code
+
+- [`sql/04_int_intervals.sql`](sql/04_int_intervals.sql): joins prices, solar output and the calendar into one
+  row per five-minute interval.
+- [`src/pricing.py`](src/pricing.py): re-levels historical prices to the futures price.
+- [`src/bootstrap.py`](src/bootstrap.py): builds simulated years from 7-day blocks of real history.
+- [`src/strategies.py`](src/strategies.py): the cost engine for every strategy and the battery dispatch rule.
+- [`tests/test_costs.py`](tests/test_costs.py): hand-worked examples, real historical days and cost tests.
 
 ## How I checked the numbers
 

@@ -84,9 +84,11 @@ def hedge_curve_chart() -> None:
     curve = read_table("hedge_curve").query("fy == @FY")
     unhedged = curve.query("hedge_pct == 0").iloc[0]
     best = curve.loc[curve["p95_cost_m"].idxmin()]
+    payoff = read_table("hedge_breakeven").query("fy == @FY").iloc[0]
     fig, ax = titled_figure(
         f"Hedging {best.hedge_pct:.0f}% of average load cuts FY{FY % 100} bad-year cost by "
-        f"${best.p95_reduction_m:.1f}M, with no change in expected cost",
+        f"${best.p95_reduction_m:.1f}M, with no change in expected cost if futures are fairly priced "
+        f"(each $1/MWh futures premium would cost about ${payoff.payoff_m_per_dollar_100:.2f}M a year)",
         f"Annual wholesale cost by baseload hedge level, FY{FY % 100}, $M. P95 = cost in a 1-in-20 bad year. "
         "Past 100% the surplus hedge adds risk again.",
     )
