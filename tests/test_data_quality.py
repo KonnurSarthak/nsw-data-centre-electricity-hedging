@@ -95,7 +95,7 @@ def test_bootstrap_weighted_mean_price_equals_futures_price(intervals, fy):
 @pytest.mark.parametrize("fy", scenarios.TARGET_FYS)
 def test_simulated_mean_price_is_close_to_futures_price(fy):
     annual = scenarios.simulated_years(fy)
-    simulated_mean = annual["price_mwh"].mean() / annual["hours"].mean()
+    simulated_mean = annual["baseload_settlement_per_mw"].mean() / annual["hours"].mean()
     # 5,000 random years leave sampling noise: the seed check in the validation log has an SD of $0.10/MWh,
     # so $0.25 is about 2.5 SD. The exact weighted-mean test above guards the calibration itself.
     assert simulated_mean == pytest.approx(FUTURES_PRICE[fy], abs=0.25)

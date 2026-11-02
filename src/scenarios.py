@@ -245,7 +245,7 @@ def breakeven(min_p95_level: float) -> pd.DataFrame:
         annual = simulated_years(fy)
         # Expected hedge payoff is zero where F x expected hours = expected sum of price x hours. Because prices
         # are calibrated to average F in the bootstrap, this equals F up to sampling noise.
-        breakeven_price = annual["price_mwh"].mean() / annual["hours"].mean()
+        breakeven_price = annual["baseload_settlement_per_mw"].mean() / annual["hours"].mean()
         rows.append({"fy": fy, "futures_price": FUTURES_PRICE[fy], "breakeven_price": breakeven_price,
                      "breakeven_minus_futures": breakeven_price - FUTURES_PRICE[fy],
                      # Each $1/MWh that realised average spot ends above F pays the hedge holder hedge_mw x hours.

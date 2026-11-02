@@ -66,7 +66,7 @@ def daily_components(
         "spot_cost": load_mwh * price,
         "hours": 1 / INTERVALS_PER_HOUR,
         # Dollars paid by 1 MW of flat load: the floating leg of a baseload swap.
-        "price_mwh": price / INTERVALS_PER_HOUR,
+        "baseload_settlement_per_mw": price / INTERVALS_PER_HOUR,
         "solar_mwh": solar_mwh,
         "solar_value": solar_mwh * price,
         "solar_mwh_settled": solar_mwh * settles,
@@ -89,7 +89,7 @@ def strategy_cost(
     parts can be daily, monthly or simulated-annual sums of daily_components, because the cost is linear.
     battery_fade is the capacity factor applied to battery revenue; None means no battery.
     """
-    cost = parts["spot_cost"] + hedge_mw * (futures_price * parts["hours"] - parts["price_mwh"])
+    cost = parts["spot_cost"] + hedge_mw * (futures_price * parts["hours"] - parts["baseload_settlement_per_mw"])
     if strike is not None:
         solar_mwh = parts["solar_mwh_settled"] if suspend_negative else parts["solar_mwh"]
         solar_value = parts["solar_value_settled"] if suspend_negative else parts["solar_value"]

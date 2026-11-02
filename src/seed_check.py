@@ -28,7 +28,7 @@ def seed_sensitivity(n_years: int = N_YEARS) -> pd.DataFrame:
             "spot_mean_m": spot.mean() / 1e6,
             "spot_p95_m": spot.quantile(0.95) / 1e6,
             "hedge_100_p95_m": hedged.quantile(0.95) / 1e6,
-            "breakeven_price": annual["price_mwh"].mean() / annual["hours"].mean(),
+            "breakeven_price": annual["baseload_settlement_per_mw"].mean() / annual["hours"].mean(),
         })
     return pd.DataFrame(rows)
 
