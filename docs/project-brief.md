@@ -125,7 +125,8 @@ the battery and/or PPA on top of the chosen hedge level.
   data), converted to a normalised 0-1 output factor. Only the factor is committed; the farm is not named.
 - **Date range:** analysis pool 1 Oct 2021-30 Jun 2024.
 - **Licence:** raw files are not committed (gitignored); a fetch script reproduces the price data.
-  [TBD: confirm AEMO copyright permissions in the data audit]
+  [AEMO Copyright Permissions](https://www.aemo.com.au/privacy-and-legal-notices/copyright-permissions)
+  allow use for any purpose with accurate attribution to AEMO.
 
 ## Limitations (known up front)
 - About 3 years of history means P95 is drawn from a small number of seasons; a bad year worse
@@ -141,11 +142,11 @@ the battery and/or PPA on top of the chosen hedge level.
 - Wholesale energy only; the total bill is higher.
 
 ## Deliverables (v1)
-- [ ] SQL + Python pipeline
-- [ ] Validated metrics
-- [ ] Findings report (`reports/findings.md`)
-- [ ] README that passes the 30-second test, with 5-6 takeaway-titled charts
-- Later add-on: Power BI dashboard + screenshots
+- [x] SQL + Python pipeline
+- [x] Validated metrics
+- [x] Findings report (`reports/findings.md`)
+- [x] README that passes the 30-second test, with 5-6 takeaway-titled charts
+- Later add-on (after v1): Power BI dashboard + screenshots
 
 ## Timeline
 Build 28 Oct-2 Nov 2026; publish 2 Nov 2026 (moved from 29 Oct 2026).
