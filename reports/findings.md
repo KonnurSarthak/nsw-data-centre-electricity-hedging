@@ -7,7 +7,7 @@ costs and what it costs in a bad year?
 > **P95 (bad-year) cost:** the annual cost that only 1 in 20 simulated years exceeds; a plausible bad year.
 > **Cost of uncertainty:** P95 minus expected (average) cost; how much extra a bad year costs over a normal one.
 
-Every figure below comes from a table in `reports/tables/` (named in brackets) produced by
+Every figure below comes from a table in `reports/tables/` (named in parentheses) produced by
 `python -m src.scenarios`. Costs are wholesale energy only, in $M a year. Expected cost is an exact average over
 the bootstrap draws; P95 comes from 5,000 simulated years per FY. Charts are built by `python -m src.viz`.
 
@@ -185,7 +185,7 @@ Added during the analysis:
 
 ## Next steps
 
-- Build the Power BI dashboard on the result tables (`/dashboard`).
+- Build the Power BI dashboard on the result tables.
 - Stress-test a bad year worse than history (e.g. a repeat of 2022 without the $300 cap).
 - Size the hedge from forecast load during ramp-up and test volume risk at lower utilisation.
 - Re-run the battery case as GenCost costs fall and add other revenue streams.

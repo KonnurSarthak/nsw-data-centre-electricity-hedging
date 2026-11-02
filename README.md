@@ -112,7 +112,7 @@ The full list is in [the findings report](reports/findings.md#limitations).
 
 ## How to run
 
-Requires Python 3.13. From the repo root:
+Requires Python 3.13. On Windows, clone to a short path (for example `C:\projects`) because of the 260-character path limit. From the repo root:
 
 ```bash
 python -m venv .venv
@@ -134,7 +134,7 @@ pytest                           # run the 50 tests
 ├── sql/                 DuckDB staging models, run in number order
 ├── src/                 fetch, clean, load, pricing, simulation, strategy costs, scenarios, charts
 ├── tests/               data-quality and cost-engine tests
-├── notebooks/           data audit
+├── notebooks/           data audit (needs the local xlsx files; see data/raw/README.md)
 ├── reports/
 │   ├── findings.md      full findings, recommendations and limitations
 │   ├── figures/         the 6 charts

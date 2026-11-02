@@ -1,7 +1,7 @@
 """Build the report charts from reports/tables/ and save them to reports/figures/.
 
 Usage from the project root: python -m src.viz
-Every number in a title or label is read from a result table, never typed by hand.
+Result figures in titles and labels are read from the tables; scenario settings (the 20% bands, $65 strike, 90-100% range) are typed.
 """
 from pathlib import Path
 
