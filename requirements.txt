@@ -1,8 +1,8 @@
-pandas
-duckdb
-matplotlib
-jupyter
-pytest
-openpyxl
-requests
-pyarrow
+pandas==3.1.0
+duckdb==2.0.0
+matplotlib==3.11.2
+jupyter==1.1.1
+pytest==9.2.0
+openpyxl==3.1.5
+requests==2.34.2
+pyarrow==26.0.0
