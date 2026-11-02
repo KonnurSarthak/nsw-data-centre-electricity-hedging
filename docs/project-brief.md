@@ -13,7 +13,7 @@ the next three financial years (FY2028-FY2030)?
 - **Decision this supports:** procurement strategy, how much of the load to hedge, and whether a
   battery or a solar contract is worth it
 
-## Success metric / KPIs
+## KPIs
 Energy per 5-minute interval: MWh = MW / 12. `F` = futures price for the FY, `K` = PPA strike price.
 
 | KPI | Exact formula | Grain |
@@ -58,7 +58,7 @@ between strategies come from the strategy, not from luck in the draw.
 - CSIRO GenCost 2025-26: 2-hour battery capital cost $1,050/kW in 2025, down 15% in the latest year
   (consultation draft table; the final report, July 2026, confirms the draft battery costs).
   [GenCost 2025-26](https://www.csiro.au/en/research/technology-space/energy/electricity-transition/gencost)
-  Battery fixed O&M not found in a citable form within the time box: assumed 2.5% of capex per year,
+  Battery fixed O&M: no citable value found; assumed 2.5% of capex per year,
   1.5-3.5% sensitivity.
 - AEMC schedule of reliability settings 2026-27: market price cap $23,200/MWh from 1 July 2026, the
   latest published value; FY28-FY30 caps are CPI-indexed and not yet set. Market floor -$1,000/MWh.
@@ -122,30 +122,14 @@ the battery and/or PPA on top of the chosen hedge level.
   (`PRICE_AND_DEMAND_YYYYMM_NSW1.csv`). Reconciled against the local xlsx export from 1 Oct 2021
   only (pre-5-minute-settlement files are 30-minute).
 - **Solar:** 5-minute dispatch of an existing NSW utility-scale solar farm (102 MW, AEMO dispatch
-  data), converted to a normalised 0-1 output factor. Only the factor is committed; the farm is not named.
+  data), converted to a normalised 0-1 output factor. Only the factor is committed.
 - **Date range:** analysis pool 1 Oct 2021-30 Jun 2024.
 - **Licence:** raw files are not committed (gitignored); a fetch script reproduces the price data.
   [AEMO Copyright Permissions](https://www.aemo.com.au/privacy-and-legal-notices/copyright-permissions)
   allow use for any purpose with accurate attribution to AEMO.
 
-## Limitations (known up front)
-- About 3 years of history means P95 is drawn from a small number of seasons; a bad year worse
-  than anything in FY22-FY24 is not represented.
-- Re-levelling by scaling shrinks crisis-era spikes in proportion; the shift sensitivity tests this.
-- The June 2022 administered price cap ($300/MWh) truncated the crisis tail, so history likely
-  understates how bad that period could have been without intervention.
-- The solar factor comes from one farm and keeps its outage days (12 days with midday output below 5 MW).
-- FY30 is held flat at the FY29 settle (no FY30 quote on the retrieval date).
-- The load profile is stylised. Hyperscale data centre loads are often flatter than this, which
-  would make a baseload hedge fit even more closely.
-- Battery NPV runs 15 years but prices are only observed to FY30; later years assume FY30 levels.
-- Wholesale energy only; the total bill is higher.
-
-## Deliverables
-- [x] SQL + Python pipeline
-- [x] Validated metrics
-- [x] Findings report (`reports/findings.md`)
-- [x] README that passes the 30-second test, with 5-6 takeaway-titled charts
+## Limitations
+See the limitations in [reports/findings.md](../reports/findings.md#limitations).
 
 ## Analysis plan
 1. **Fetch and reconcile (Python):** download AEMO CSVs, reconcile against the xlsx from 1 Oct 2021.
@@ -158,4 +142,4 @@ the battery and/or PPA on top of the chosen hedge level.
 8. **Scenarios:** hedge-level curve, break-even price, realised-vs-futures, hedge-price and strike
    sensitivities, with/without May-July 2022, recommended package.
 9. **Validate:** reconciliations, hand-checked days, break-even check, logged in `docs/validation-log.md`.
-10. **Report:** findings write-up and 5-6 takeaway-titled charts for the README.
+10. **Report:** findings write-up and charts.
