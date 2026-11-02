@@ -92,7 +92,7 @@ standard SQL ports to PostgreSQL or Snowflake.
 ## How I checked the numbers
 
 The AEMO download matches a separate export to within half a cent on all 289,150 shared intervals, and SQL
-and pandas versions of the spot cost agree to within one part in a billion. 50 automated tests cover row counts,
+and pandas versions of the spot cost agree to within one part in a billion. 56 automated tests cover row counts,
 price limits, a hand-worked example, a real historical day for every strategy and the battery's physical limits.
 Tests were also run against deliberately altered code to confirm they catch errors. Every check and its result is
 in the [validation log](docs/validation-log.md).
@@ -124,7 +124,7 @@ python -m src.clean              # clean prices into data/processed/ (the solar 
 python -m src.staging            # run the SQL in sql/ on DuckDB
 python -m src.scenarios          # write the 14 result tables to reports/tables/
 python -m src.viz                # write the 6 charts to reports/figures/
-pytest                           # run the 50 tests
+pytest                           # run the 56 tests
 ```
 
 ```
