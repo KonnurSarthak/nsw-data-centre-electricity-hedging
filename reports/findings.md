@@ -183,9 +183,3 @@ Added during the analysis:
   are shown with their ranges.
 - The run without May-Jul 2022 draws every simulated July from July 2023.
 
-## Next steps
-
-- Build the Power BI dashboard on the result tables.
-- Stress-test a bad year worse than history (e.g. a repeat of 2022 without the $300 cap).
-- Size the hedge from forecast load during ramp-up and test volume risk at lower utilisation.
-- Re-run the battery case as GenCost costs fall and add other revenue streams.

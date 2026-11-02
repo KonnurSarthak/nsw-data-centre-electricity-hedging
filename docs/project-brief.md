@@ -78,8 +78,8 @@ between strategies come from the strategy, not from luck in the draw.
   curve 0-130% of average load, hedge-price and PPA-strike sensitivities, results with and without
   May-July 2022.
 - **Out:** network charges, retail margin, loss factors, LGC and environmental charges (stated as
-  excluded). Possible extensions: 10-year NSW demand-growth scenarios, a detailed price-impact
-  regression, carbon shadow pricing, Power BI dashboard (planned after v1).
+  excluded), 10-year NSW demand-growth scenarios, a detailed price-impact regression and carbon
+  shadow pricing.
 
 ## Strategies
 1. **Spot:** buy all load at 5-minute spot.
@@ -141,12 +141,11 @@ the battery and/or PPA on top of the chosen hedge level.
 - Battery NPV runs 15 years but prices are only observed to FY30; later years assume FY30 levels.
 - Wholesale energy only; the total bill is higher.
 
-## Deliverables (v1)
+## Deliverables
 - [x] SQL + Python pipeline
 - [x] Validated metrics
 - [x] Findings report (`reports/findings.md`)
 - [x] README that passes the 30-second test, with 5-6 takeaway-titled charts
-- Later add-on (after v1): Power BI dashboard + screenshots
 
 ## Timeline
 Build 28 Oct-2 Nov 2026; publish 2 Nov 2026 (moved from 29 Oct 2026).

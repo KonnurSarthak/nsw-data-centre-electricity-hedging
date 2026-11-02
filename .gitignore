@@ -21,11 +21,6 @@ data/raw/*
 *.duckdb
 *.db
 
-# Power BI caches
-*.pbix.bak
-**/.pbi/cache.abf
-**/.pbi/localSettings.json
-
 # OS / editor
 .DS_Store
 Thumbs.db
