@@ -2,10 +2,10 @@
 
 *Capstone project, Master of Business Analytics, final semester (2026)*
 
-**Answer:** hedge 90-100% of average load with ASX baseload futures. It cuts the FY28 bad-year electricity
-cost from $53.03M to $46.25-46.77M with no change in expected cost ($45.90M) if futures are fairly priced (each
-$1/MWh futures premium would cost about $0.47M a year at a full hedge). At today's assumptions, a battery, and a
-solar PPA at the assumed $65/MWh strike, both cost more than spot.
+**Answer:** hedge 90-100% of average load with ASX baseload futures: in FY28 this cuts the bad-year cost from
+$53.03M to $46.25-46.77M, and expected cost stays at $45.90M. That assumes futures are fairly priced; each $1/MWh
+futures premium would cost about $0.47M a year at a full hedge. A battery, and a solar PPA at the assumed $65/MWh
+strike, both cost more than spot.
 
 ![Hedging 100% of average load cuts FY28 bad-year cost by $6.8M, with no change in expected cost if futures are fairly priced (each $1/MWh futures premium would cost about $0.47M a year)](reports/figures/01_hedge_curve.png)
 
@@ -14,10 +14,12 @@ solar PPA at the assumed $65/MWh strike, both cost more than spot.
 > **P95 (bad-year) cost:** the annual cost that only 1 in 20 simulated years exceeds; a plausible bad year.
 > **Cost of uncertainty:** P95 minus expected (average) cost; how much extra a bad year costs over a normal one.
 
-1. **Hedge 90-100% of average load.** A baseload futures hedge cuts FY28 P95 cost from $53.03M to $46.77M (90%)
-   or $46.25M (100%). Expected cost stays at $45.90M.
-2. **The hedge buys certainty, not savings.** If spot averages 20% below futures, the 100% hedge costs $9.27M more
-   than spot. If spot averages 20% above, it costs $9.27M less. Each $1/MWh gap is worth $0.47M a year.
+1. **Hedge 90-100% of average load: it buys certainty, not savings.** Futures fix the price on almost all the
+   load, so a bad year costs nearly the same as a normal one: at a full hedge the FY28 cost of uncertainty falls
+   from $7.13M to $0.35M. The average cost doesn't move, because the model prices futures fairly.
+2. **Whether the hedge "saves" money depends only on where spot ends up.** If spot averages 20% below futures, the
+   100% hedge costs $9.27M more than spot. If it averages 20% above, it costs $9.27M less. Each $1/MWh gap is worth
+   $0.47M a year.
 3. **Don't invest in a battery yet.** It raises expected cost from $45.90M to $47.50M. NPV is -$14.62M at 8%
    (-$11.80M to -$16.87M across the sensitivities), and payback is 29.5 years against a 15-year life.
 4. **Only sign a solar PPA below break-even.** Solar earns $53.41/MWh, 54% of the baseload price. A PPA lowers
@@ -101,8 +103,8 @@ The bad-year tail also comes from short, extreme spikes in other years, so the c
    battery discount rate 6-10%, and a run without May-Jul 2022.
 
 **Tools:** SQL on DuckDB for staging and joins; Python (pandas, matplotlib) for the load profile, pricing,
-simulation and charts; pytest for tests. I used DuckDB because it runs on any laptop with no server, and its
-standard SQL ports to PostgreSQL or Snowflake.
+simulation and charts; pytest for tests. I used DuckDB because it runs on any laptop with no server. The queries are
+mostly standard SQL; file readers and a few date functions are DuckDB-specific.
 
 ## Where to look in the code
 
