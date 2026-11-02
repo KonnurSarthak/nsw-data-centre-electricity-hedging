@@ -25,7 +25,7 @@ Energy per 5-minute interval: MWh = MW / 12. `F` = futures price for the FY, `K`
 | Cost of uncertainty ($M) | P95 − expected annual cost | strategy × FY |
 | Worst-month cost ($M) | highest calendar-month cost in the re-levelled historical series | strategy |
 | NPV ($M, capex options only) | `−capex + Σ_{t=1..15} (saving_t × 0.98^(t−1) − O&M_t) / (1 + r)^t`, where saving = spot cost − strategy cost; 15-year asset life, 2%/yr capacity fade, prices held at the FY30 level after FY30, r = 8% (6-10% sensitivity) | strategy |
-| Simple payback (years, capex options only) | capex / average annual saving after O&M | strategy |
+| Simple payback (years, capex options only) | capex / average annual saving after 2%/yr fade and O&M over the 15-year life | strategy |
 | Hedge break-even futures price ($/MWh) | futures price `F` at which expected hedged cost = expected spot cost | FY |
 
 All strategies are costed on the **same** simulated days in each bootstrap run, so differences
@@ -75,7 +75,7 @@ between strategies come from the strategy, not from luck in the draw.
 - **In:** wholesale energy cost only, NSW1 region, 5-minute resolution for all cost calculations
   (half-hourly only for charts and profiles). FY2022-FY2024 history (pool from 1 Oct 2021)
   re-levelled to FY2028-FY2030 futures. Four strategies plus one recommended package. Hedge-level
-  curve 0-100% of average load, hedge-price and PPA-strike sensitivities, results with and without
+  curve 0-130% of average load, hedge-price and PPA-strike sensitivities, results with and without
   May-July 2022.
 - **Out:** network charges, retail margin, loss factors, LGC and environmental charges (stated as
   excluded). Possible extensions: 10-year NSW demand-growth scenarios, a detailed price-impact
@@ -83,9 +83,10 @@ between strategies come from the strategy, not from luck in the draw.
 
 ## Strategies
 1. **Spot:** buy all load at 5-minute spot.
-2. **Futures hedge:** baseload swap (contract for difference) at `F`. Hedge-level curve from 0-100%
-   of average load (expected vs bad-year cost). Recommended level = lowest level that captures 90%
-   of the maximum P95 reduction.
+2. **Futures hedge:** baseload swap (contract for difference) at `F`. Hedge-level curve from 0-130%
+   of average load in 10% steps (expected vs bad-year cost). Recommended level = the level with the
+   lowest FY-average P95, shown next to 80%, 90% and 100%. (The earlier 90%-knee rule was retired:
+   the curve is nearly straight, so it returned 90% by construction.)
 3. **Battery:** about 20 MW / 40 MWh, 88% round-trip efficiency, capex and O&M from CSIRO GenCost.
    Dispatch uses past information only: charge below the trailing 7-day 25th percentile price,
    discharge above the 75th, at most one cycle per day.
@@ -104,8 +105,10 @@ the battery and/or PPA on top of the chosen hedge level.
   re-solved after clipping so the clipped mean still equals `F`.
 - **Bootstrap load:** each simulated day uses the drawn historical day's own calendar (season,
   weekday, time band), so load and price stay paired from the same real day.
-- **Bootstrap:** 7-day blocks drawn from the same calendar month, which keeps multi-day spike
-  events and seasonality.
+- **Bootstrap:** 5,000 simulated years per FY from 7-day blocks drawn within the same calendar
+  month, which keeps multi-day spike events and seasonality. Blocks wrap from a month's last day to
+  its first so every day is equally likely. One seed for all FYs. Prices are then calibrated once
+  more so the bootstrap-weighted mean equals `F` (July has only two pool years, October three).
 - **Realised-vs-futures test:** re-run with realised spot set above and below `F` to show what the
   hedge does when futures turn out cheap or expensive.
 - **Load profile:** `grid_MW = 50 × utilisation × intraday factor × PUE`. Utilisation 85% weekdays,
