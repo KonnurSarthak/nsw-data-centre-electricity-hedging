@@ -149,7 +149,7 @@ hedge pays when spot ends well above futures (insight 3), which is an outcome, n
 | 5 | Bad-year cost is driven mainly by May-Jul 2022 | Rejected | No reduction in cost of uncertainty without it: 15.5% vs 16.1% (`crisis_sensitivity.csv`) |
 | 6 | Suspending PPA settlement at negative prices lowers PPA expected cost | Supported | Break-even $53.41 to $66.99; FY28 expected $47.21M to $45.70M at $65 (`ppa_breakeven.csv`, `strategy_summary.csv`) |
 
-## Recommendations (ranked by impact x ease)
+## Recommendations
 
 | # | Action | Owner | Expected effect | How to measure | Risks |
 |---|---|---|---|---|---|
@@ -159,27 +159,28 @@ hedge pays when spot ends well above futures (insight 3), which is an outcome, n
 
 ## Limitations
 
-Carried over from the brief:
-- About three years of history (Oct 2021-Jun 2024) means P95 draws on a small number of seasons; a bad year worse
-  than anything in FY22-FY24 is not represented.
-- Re-levelling by scaling shrinks crisis-era spikes in proportion; the shift sensitivity tests this
-  (`shift_sensitivity.csv`).
-- The June 2022 administered price cap ($300/MWh) truncated the crisis tail, so history likely understates how bad
-  that period could have been without intervention.
-- The solar factor comes from one farm and keeps its outage days (12 days with midday output below 5 MW).
-- FY30 is held flat at the FY29 settle (no FY30 quote on the retrieval date).
-- The load profile is stylised. Hyperscale data centre loads are often flatter, which would make a baseload hedge
-  fit even more closely.
-- Battery NPV runs 15 years but prices are only observed to FY30; later years assume FY30 levels.
-- Wholesale energy only; network charges, retail margin, loss factors and LGC/environmental charges are excluded,
-  so the total bill is higher.
+Most of these don't change the conclusions. Where one could, I say so.
 
-Added during the analysis:
-- Futures are fair by construction. If futures carry a risk premium over expected spot, every MW hedged has a real
-  expected cost.
-- P95 is simulated: the seed-to-seed standard deviation of spot FY28 P95 is $0.13M, so P95 gaps under about $0.3M
-  between strategies are treated as noise (`docs/validation-log.md`).
-- The PPA strike ($65, range $55-75) and battery O&M (2.5% of capex, range 1.5-3.5%) have no citable source; both
-  are shown with their ranges.
-- The run without May-Jul 2022 draws every simulated July from July 2023.
+**Data**
+- **Three years of history (Oct 2021-Jun 2024).** The bad-year (P95) cost draws on only a few seasons, so a year
+  worse than anything in FY22-FY24 isn't represented. This likely understates risk, which strengthens rather than
+  weakens the case for hedging.
+- **The 2022 crisis was capped.** AEMO's $300/MWh administered price cap in June 2022 cut off the crisis tail, so
+  history understates how bad that winter could have been.
+- **One solar farm.** The solar profile comes from a single farm and keeps its outage days. A portfolio PPA would be
+  smoother, so the PPA's risk may be slightly overstated.
 
+**Method**
+- **Futures are assumed fairly priced.** This is the assumption behind "no change in expected cost". If futures
+  carry a premium over expected spot, every MW hedged has a real cost: about $0.47M a year per $1/MWh at a full
+  hedge.
+- **Each year is re-levelled separately.** This may contribute to the result that excluding May-Jul 2022 doesn't
+  lower the cost of uncertainty.
+- **Simulation noise.** P95 varies by about $0.13M across random seeds, so I treat gaps under about $0.3M between
+  strategies as noise.
+
+**Scope and inputs**
+- **Wholesale energy only.** Network charges, retail margin, loss factors and environmental charges are excluded.
+  The total bill is higher, but these costs are largely the same across strategies.
+- **Two unsourced inputs.** The PPA strike ($65, tested $55-75) and battery O&M (2.5% of capex, tested 1.5-3.5%)
+  have no citable source, so I judge the PPA against its break-even strike rather than the $65 result.

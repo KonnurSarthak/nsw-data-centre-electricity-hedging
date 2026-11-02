@@ -30,7 +30,7 @@ FY29-FY30 results and the hypothesis verdicts are in [the findings report](repor
 
 ## Recommendations
 
-In priority order; owners, measures and risks are in [the findings report](reports/findings.md#recommendations-ranked-by-impact-x-ease).
+In priority order; owners, measures and risks are in [the findings report](reports/findings.md#recommendations).
 
 1. **Hedge 90-100% of average load (48-53 MW) with ASX baseload futures for FY28-FY30**, and check the hedge
    ratio against actual load each month.
@@ -121,16 +121,18 @@ in the [validation log](docs/validation-log.md).
 
 ## Limitations
 
-- **Futures are assumed to be fairly priced.** If futures carry a risk premium over expected spot, every MW hedged
-  has a real expected cost.
-- **About three years of history.** A bad year worse than anything in Oct 2021-Jun 2024 is not represented, and the
-  June 2022 $300/MWh administered price cap held down the worst of the crisis.
-- **Wholesale energy only.** Network charges, retail margin, loss factors and environmental charges are excluded,
-  so the total bill is higher.
-- **Some inputs are stylised or unsourced.** The load profile is stylised, the solar profile comes from one farm,
-  and the PPA strike and battery O&M have no citable source, so both are shown with ranges.
+- **Futures are assumed fairly priced.** This is the assumption behind "no change in expected cost". If futures
+  carry a premium over expected spot, every MW hedged has a real cost: about $0.47M a year per $1/MWh at a full
+  hedge.
+- **Three years of history (Oct 2021-Jun 2024).** A year worse than anything in FY22-FY24 isn't represented, and
+  AEMO's $300/MWh cap in June 2022 cut off the crisis tail. This likely understates risk, which strengthens the case
+  for hedging.
+- **Each year is re-levelled separately.** This may contribute to the result that excluding May-Jul 2022 doesn't
+  lower the cost of uncertainty.
+- **Wholesale energy only.** Network charges, retail margin, loss factors and environmental charges are excluded.
+  The total bill is higher, but these costs are largely the same across strategies.
 
-The full list is in [the findings report](reports/findings.md#limitations).
+The full list, including the two unsourced inputs, is in [the findings report](reports/findings.md#limitations).
 
 ## How to run
 
