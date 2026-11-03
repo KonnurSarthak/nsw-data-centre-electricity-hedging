@@ -11,8 +11,7 @@ venv/
 .ipynb_checkpoints/
 .pytest_cache/
 
-# Data: raw data is ignored by default. Remove this line only if the licence allows redistribution
-# and files are small; otherwise provide a fetch script.
+# Raw data is not committed; python -m src.fetch_aemo downloads it.
 data/raw/*
 !data/raw/README.md
 
