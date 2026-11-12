@@ -8,7 +8,7 @@ costs and what it costs in a bad year?
 > **Cost of uncertainty:** P95 minus expected (average) cost; how much extra a bad year costs over a normal one.
 
 Every figure below comes from a table in `reports/tables/` (named in parentheses) produced by
-`python -m src.scenarios`. Costs are wholesale energy only, in $M a year. Expected cost is an exact average over
+`python -m src.scenarios` ([`src/scenarios.py`](../src/scenarios.py)). Costs are wholesale energy only, in $M a year. Expected cost is an exact average over
 the bootstrap draws; P95 comes from 5,000 simulated years per FY. Charts are built by `python -m src.viz`.
 
 ## Executive summary
@@ -66,6 +66,8 @@ Every hedge level has the spot expected cost because the model prices futures fa
 - **Now what:** hedge 90-100% of average load (48-53 MW of baseload swaps). At 90% the FY28 P95 is $46.77M,
   $0.52M above the minimum, and the gap leaves room for load coming in below plan.
 
+Code: [hedge_curve()](../src/scenarios.py#L123) in `src/scenarios.py`
+
 ### 2. Only the hedge shrinks the bad year
 
 ![Strategy comparison](figures/02_strategy_comparison.png)
@@ -79,6 +81,8 @@ Every hedge level has the spot expected cost because the model prices futures fa
 - **Now what:** start with the hedge; treat the battery and PPA as separate decisions with their own
   break-even tests (insights 4 and 5).
 
+Code: [strategy_table()](../src/scenarios.py#L164) and [package_rule()](../src/scenarios.py#L207) in `src/scenarios.py`
+
 ### 3. The hedge buys certainty, not savings
 
 ![Realised vs futures](figures/03_realised_vs_futures.png)
@@ -91,6 +95,8 @@ Every hedge level has the spot expected cost because the model prices futures fa
 - **Now what:** report the hedge internally as budget certainty, not as a saving, and judge it on the variance
   it removes rather than on its year-end mark-to-market.
 
+Code: [realised_vs_futures()](../src/scenarios.py#L257) and [breakeven()](../src/scenarios.py#L242) in `src/scenarios.py`
+
 ### 4. Solar output is worth about half the baseload price, so the strike decides the PPA
 
 ![Solar capture price](figures/04_solar_capture_price.png)
@@ -101,6 +107,8 @@ Every hedge level has the spot expected cost because the model prices futures fa
 - **So what:** a PPA lowers expected cost only if its strike sits below the value of the energy it delivers.
   Its cost of uncertainty ($6.43M) is a little below spot's ($7.13M), so it is not a substitute for the hedge.
 - **Now what:** judge any PPA offer against the break-even strike, not against the baseload price.
+
+Code: [ppa_breakeven()](../src/scenarios.py#L180) and [ppa_strike_sensitivity()](../src/scenarios.py#L278) in `src/scenarios.py`
 
 ### 5. A negative-price clause is worth about $14/MWh of strike
 
@@ -113,6 +121,8 @@ Every hedge level has the spot expected cost because the model prices futures fa
   plus the negative price in those intervals. The clause matters as much as the strike itself.
 - **Now what:** only negotiate a PPA that includes a negative-price suspension clause, with a strike below about
   $67/MWh for FY28 and $70/MWh for FY29-FY30.
+
+Code: [ppa_breakeven()](../src/scenarios.py#L180) in `src/scenarios.py`
 
 ### 6. Excluding the 2022 crisis doesn't remove the risk
 
@@ -128,6 +138,8 @@ Every hedge level has the spot expected cost because the model prices futures fa
   stretches its spikes (see [Limitations](#limitations)).
 - **Now what:** don't treat 2022 as a one-off that makes spot safe again; the case for hedging holds without it.
 
+Code: [crisis_diagnostics()](../src/scenarios.py#L315) and [sensitivity_table()](../src/scenarios.py#L307) in `src/scenarios.py`
+
 ## Why this differs from the original capstone analysis
 
 The original capstone found that hedging saved several million dollars a year. That comparison set a 2026
@@ -139,6 +151,8 @@ This analysis re-levels the same history so that spot averages the futures price
 with like. On that basis the expected saving from hedging is $0 at every hedge level (`hedge_curve.csv`), and the
 hedge's value is certainty: it cuts FY28 cost of uncertainty from $7.13M to $0.35M. The original saving is what a
 hedge pays when spot ends well above futures (insight 3), which is an outcome, not something known in advance.
+
+Code: [relevel_check()](../src/scenarios.py#L227) in `src/scenarios.py`
 
 ## Hypotheses
 
