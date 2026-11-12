@@ -106,14 +106,44 @@ The bad-year tail also comes from short, extreme spikes in other years, so the c
 simulation and charts; pytest for tests. I used DuckDB because it runs on any laptop with no server. The queries are
 mostly standard SQL; file readers and a few date functions are DuckDB-specific.
 
-## Where to look in the code
+## Project structure
 
-- [`sql/04_int_intervals.sql`](sql/04_int_intervals.sql): joins prices, solar output and the calendar into one
-  row per five-minute interval.
-- [`src/pricing.py`](src/pricing.py): re-levels historical prices to the futures price.
-- [`src/bootstrap.py`](src/bootstrap.py): builds simulated years from 7-day blocks of real history.
-- [`src/strategies.py`](src/strategies.py): the cost engine for every strategy and the battery dispatch rule.
-- [`tests/test_costs.py`](tests/test_costs.py): hand-worked examples, real historical days and cost tests.
+```mermaid
+flowchart LR
+    raw["AEMO price files"] --> prep["src/<br>download and clean"]
+    prep --> sql["sql/<br>join into 5-minute intervals"]
+    sql --> model["src/<br>load, prices, simulation, costs"]
+    model --> reports["reports/<br>tables and charts"]
+    tests["tests/"] -. check .-> sql
+    tests -. check .-> reports
+```
+
+The work moves in one direction. Python in `src/` downloads the AEMO price files and cleans them, then the SQL in
+`sql/` joins prices, solar output and a calendar into one row per five-minute interval. From there it's Python again.
+I build the data centre's load, re-level prices to the futures price, simulate 5,000 years and cost each strategy.
+The results are saved to `reports/` as CSV tables, and the charts are drawn from those tables. The tests sit
+alongside the whole pipeline and check both the joined data and the costs, so if something goes wrong, a test fails.
+
+If you only open a few files, I'd start with [`sql/04_int_intervals.sql`](sql/04_int_intervals.sql), where all the
+inputs meet. [`src/strategies.py`](src/strategies.py) has the cost formula for every strategy and the rule for when the
+battery charges. To see how a number in the report is produced, [`src/scenarios.py`](src/scenarios.py) builds every
+result table. The [`sql/`](sql/README.md), [`src/`](src/README.md) and [`tests/`](tests/README.md) folders each have
+a short README listing their files in the order they run.
+
+```
+├── data/
+│   ├── raw/             AEMO downloads (not committed; fetched by script)
+│   └── processed/       cleaned tables; only the solar output factor is committed
+├── sql/                 DuckDB staging models, run in number order
+├── src/                 fetch, clean, load, pricing, simulation, strategy costs, scenarios, charts
+├── tests/               data-quality and cost-engine tests
+├── notebooks/           data audit (needs the local xlsx files; see data/raw/README.md)
+├── reports/
+│   ├── findings.md      full findings, recommendations and limitations
+│   ├── figures/         the 6 charts
+│   └── tables/          the result tables every number comes from
+└── docs/                project brief, data dictionary, assumptions, decision and validation logs
+```
 
 ## How I checked the numbers
 
@@ -154,21 +184,6 @@ python -m src.scenarios          # write the 14 result tables to reports/tables/
 python -m src.seed_check         # rerun the bootstrap over 20 seeds, write seed_sensitivity.csv
 python -m src.viz                # write the 6 charts to reports/figures/
 pytest                           # run the 56 tests
-```
-
-```
-├── data/
-│   ├── raw/             AEMO downloads (not committed; fetched by script)
-│   └── processed/       cleaned tables; only the solar output factor is committed
-├── sql/                 DuckDB staging models, run in number order
-├── src/                 fetch, clean, load, pricing, simulation, strategy costs, scenarios, charts
-├── tests/               data-quality and cost-engine tests
-├── notebooks/           data audit (needs the local xlsx files; see data/raw/README.md)
-├── reports/
-│   ├── findings.md      full findings, recommendations and limitations
-│   ├── figures/         the 6 charts
-│   └── tables/          the result tables every number comes from
-└── docs/                project brief, data dictionary, assumptions, decision and validation logs
 ```
 
 ## Data attribution
